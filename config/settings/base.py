@@ -24,6 +24,7 @@ INSTALLED_APPS = [
 
     # Third-party
     "tailwind",
+    "theme",
     "django_browser_reload",
 
     # Local apps
@@ -35,6 +36,11 @@ INSTALLED_APPS = [
     "apps.notifications",
     "apps.emails",
 ]
+
+
+TAILWIND_APP_NAME = "theme"
+INTERNAL_IPS = ["127.0.0.1"]
+
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
