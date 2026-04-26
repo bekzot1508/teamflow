@@ -1,38 +1,94 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="max-w-5xl mx-auto">
-  <div class="bg-white rounded-xl shadow p-6 mb-6">
-    <h1 class="text-2xl font-bold text-gray-900">
-      {{ workspace.name }}
-    </h1>
+  <div class="max-w-5xl mx-auto">
+    <div class="bg-white rounded-xl shadow p-6 mb-6">
+      <h1 class="text-2xl font-bold text-gray-900">
+        {{ workspace.name }}
+      </h1>
 
-    <p class="text-gray-500 mt-2">
-      {{ workspace.description|default:"No description" }}
-    </p>
+      <p class="text-gray-500 mt-2">
+        {{ workspace.description|default:"No description" }}
+      </p>
 
-    <p class="text-sm text-gray-400 mt-4">
-      Owner: {{ workspace.owner.email }}
-    </p>
-  </div>
+      <p class="text-sm text-gray-400 mt-4">
+        Owner: {{ workspace.owner.username }}
+      </p>
+      <p class="text-sm text-gray-400 mt-2">
+        Owner Email: {{ workspace.owner.email }}
+      </p>
+    </div>
 
-  <div class="bg-white rounded-xl shadow p-6">
-    <h2 class="text-xl font-semibold mb-4">Members</h2>
+    <div class="bg-white rounded-xl shadow p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold">Members</h2>
+      </div>
 
-    <div class="space-y-3">
-      {% for membership in workspace.memberships.all %}
-        <div class="flex justify-between border-b pb-2">
+      {% if can_manage %}
+        <form method="post"
+              action="{% url 'workspaces:member_add' workspace.id %}"
+              class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+          {% csrf_token %}
+
           <div>
-            <p class="font-medium">{{ membership.user.full_name }}</p>
-            <p class="text-sm text-gray-500">{{ membership.user.email }}</p>
+            {{ member_add_form.email }}
           </div>
 
-          <span class="text-sm bg-gray-100 px-3 py-1 rounded-full">
-            {{ membership.get_role_display }}
-          </span>
-        </div>
-      {% endfor %}
+          <div>
+            {{ member_add_form.role }}
+          </div>
+
+          <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+            Add Member
+          </button>
+        </form>
+      {% endif %}
+
+      <div class="space-y-3">
+        {% for membership in workspace.memberships.all %}
+          <div class="flex items-center justify-between border-b pb-3">
+            <div>
+              <p class="font-medium">{{ membership.user.full_name }}</p>
+              <p class="font-medium">{{ membership.user.username }}</p>
+              <p class="text-sm text-gray-500">{{ membership.user.email }}</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+              {% if membership.role == "owner" %}
+                <span class="text-sm bg-purple-100 text-purple-700 px-3 py-1 rounded-full">
+                  Owner
+                </span>
+              {% elif can_manage %}
+                <form method="post"
+                      action="{% url 'workspaces:member_role_update' workspace.id membership.id %}">
+                  {% csrf_token %}
+                  <select name="role" class="border rounded-lg px-3 py-2 text-sm">
+                    <option value="admin" {% if membership.role == "admin" %}selected{% endif %}>Admin</option>
+                    <option value="member" {% if membership.role == "member" %}selected{% endif %}>Member</option>
+                    <option value="viewer" {% if membership.role == "viewer" %}selected{% endif %}>Viewer</option>
+                  </select>
+
+                  <button class="ml-2 text-sm bg-gray-900 text-dark px-3 py-2 rounded-lg">
+                    Save
+                  </button>
+                </form>
+
+                <form method="post"
+                      action="{% url 'workspaces:member_remove' workspace.id membership.id %}">
+                  {% csrf_token %}
+                  <button class="text-sm bg-red-600 text-dark px-3 py-2 rounded-lg">
+                    Remove
+                  </button>
+                </form>
+              {% else %}
+                <span class="text-sm bg-gray-100 text-gray-700 px-3 py-1 rounded-full">
+                  {{ membership.get_role_display }}
+                </span>
+              {% endif %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
     </div>
   </div>
-</div>
 {% endblock %}
