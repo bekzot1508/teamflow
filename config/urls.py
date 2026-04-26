@@ -9,6 +9,7 @@ urlpatterns = [
     path("__reload__/", include("django_browser_reload.urls")),
     path("", dashboard, name="dashboard"),
     path("", include("apps.users.urls")),
+    path("workspaces/", include("apps.workspaces.urls")),
 ]
 
 if settings.DEBUG:
