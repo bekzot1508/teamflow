@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>TeamFlow</title>
+  {% load static %}
+</head>
+
+<body class="bg-gray-100">
+
+<nav class="bg-white shadow p-4 flex justify-between">
+  <div class="font-bold">TeamFlow</div>
+
+  <div class="space-x-4">
+    {% if request.user.is_authenticated %}
+      <a href="#">Dashboard</a>
+      <a href="{% url 'logout' %}">Logout</a>
+    {% else %}
+      <a href="{% url 'login' %}">Login</a>
+      <a href="{% url 'register' %}">Register</a>
+    {% endif %}
+  </div>
+</nav>
+
+<div class="p-6">
+  {% if messages %}
+    {% for m in messages %}
+      <div class="mb-2 text-green-600">{{ m }}</div>
+    {% endfor %}
+  {% endif %}
+
+  {% block content %}{% endblock %}
+</div>
+
+</body>
+</html>

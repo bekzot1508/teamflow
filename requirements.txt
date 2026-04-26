@@ -1,0 +1,8 @@
+Django==5.2.11
+psycopg[binary]==3.2.6
+python-decouple==3.8
+celery==5.4.0
+redis==5.2.1
+django-tailwind==3.8.0
+django-browser-reload==1.18.0
+Pillow==11.1.0
