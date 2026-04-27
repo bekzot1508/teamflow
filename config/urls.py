@@ -10,6 +10,7 @@ urlpatterns = [
     path("", dashboard, name="dashboard"),
     path("", include("apps.users.urls")),
     path("workspaces/", include("apps.workspaces.urls")),
+    path("projects/", include("apps.projects.urls")),
 ]
 
 if settings.DEBUG:
