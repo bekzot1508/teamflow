@@ -143,8 +143,12 @@ def create_task(
             message=f"You were assigned to task: {task.title}",
         )
 
+        # serverda background worker chargable bo'lgani uchun productionda celery ishlatmay turamiz
+        # transaction.on_commit(
+        #     lambda: send_task_assigned_email_task.delay(task.id)
+        # )
         transaction.on_commit(
-            lambda: send_task_assigned_email_task.delay(task.id)
+            lambda: queue_task_assigned_email(task.id)
         )
 
     return task
