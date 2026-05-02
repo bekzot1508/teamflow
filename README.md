@@ -18,3 +18,30 @@ Celery and Redis are configured for:
 ⚠️ Note:
 Background workers require a paid instance on Render.
 Locally, Celery runs via Docker.
+
+
+## Screenshots
+
+### Dashboard
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Workspaces
+![Workspaces](docs/screenshots/workspace.png)
+
+### Projects
+![Projects](docs/screenshots/project.png)
+
+### Kanban Board
+![Kanban](docs/screenshots/kanban.png)
+
+### Task Detail
+![Task](docs/screenshots/task_detail.png)
+
+### Notifications
+![Notifications](docs/screenshots/notifications.png)
+
+### API Docs
+![Swagger](docs/screenshots/swagger.png)
+
+### Admin
+![Admin](docs/screenshots/admin.png)
