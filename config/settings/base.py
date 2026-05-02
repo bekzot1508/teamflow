@@ -207,3 +207,4 @@ DEFAULT_FROM_EMAIL = config(
     "DEFAULT_FROM_EMAIL",
     default="TeamFlow <noreply@teamflow.local>",
 )
+ENABLE_ASYNC_EMAILS = config("ENABLE_ASYNC_EMAILS", default=False, cast=bool)

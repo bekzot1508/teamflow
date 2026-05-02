@@ -16,10 +16,15 @@ from apps.notifications.services import create_notification
 from apps.workspaces.permissions import can_create_task, can_update_task
 
 from .selectors import get_next_task_position, normalize_column_positions
-from apps.emails.tasks import (
-    send_task_assigned_email_task,
-    send_mention_email_task,
-    send_deadline_reminder_email_task
+# from apps.emails.tasks import (
+#     send_task_assigned_email_task,
+#     send_mention_email_task,
+#     send_deadline_reminder_email_task
+# )
+from apps.emails.dispatchers import (
+    queue_task_assigned_email,
+    queue_mention_email,
+    queue_deadline_reminder_email,
 )
 
 
@@ -352,8 +357,12 @@ def update_task(
             message=f"You were assigned to task: {task.title}",
         )
 
+        # serverda background worker chargable bo'lgani uchun productionda celery ishlatmay turamiz
+        # transaction.on_commit(
+        #     lambda: send_task_assigned_email_task.delay(task.id)
+        # )
         transaction.on_commit(
-            lambda: send_task_assigned_email_task.delay(task.id)
+            lambda: queue_task_assigned_email(task.id)
         )
 
     if old_deadline != new_deadline:
@@ -438,12 +447,16 @@ def create_task_comment(*, task, author, body):
                 message=f"{author.email} mentioned you in a comment: {task.title}",
             )
 
+            # serverda background worker chargable bo'lgani uchun productionda celery ishlatmay turamiz
+            # transaction.on_commit(
+            #     lambda user_id=user.id: send_mention_email_task.delay(
+            #         task.id,
+            #         user_id,
+            #         author.id,
+            #     )
+            # )
             transaction.on_commit(
-                lambda user_id=user.id: send_mention_email_task.delay(
-                    task.id,
-                    user_id,
-                    author.id,
-                )
+                lambda user_id=user.id: queue_mention_email(task.id, user.id, author.id)
             )
 
     return comment
@@ -485,7 +498,9 @@ def check_deadline_reminders():
         )
 
         # Email (async)
-        send_deadline_reminder_email_task.delay(task.id)
+        # serverda background worker chargable bo'lgani uchun productionda celery ishlatmay turamiz
+        # send_deadline_reminder_email_task.delay(task.id)
+        queue_deadline_reminder_email(task.id)
 
         # Mark as sent
         task.deadline_reminder_sent = True
