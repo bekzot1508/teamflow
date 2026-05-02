@@ -3,6 +3,26 @@
 {% block content %}
   <div class="max-w-5xl mx-auto">
     <div class="bg-white rounded-xl shadow p-6 mb-6">
+
+      <div class="flex gap-2">
+        {% if can_manage %}
+          <a href="{% url 'workspaces:update' workspace.id %}"
+             class="bg-gray-100 px-4 py-2 rounded-lg">
+            Edit
+          </a>
+        {% endif %}
+
+        {% if request.user.id == workspace.owner_id %}
+          <form method="post" action="{% url 'workspaces:archive' workspace.id %}">
+            {% csrf_token %}
+            <button class="bg-red-100 px-4 py-2 rounded-lg">
+              Archive
+            </button>
+          </form>
+        {% endif %}
+      </div>
+
+       <!--********* WorkSpace INFO ********* -->
       <h1 class="text-2xl font-bold text-gray-900">
         {{ workspace.name }}
       </h1>
@@ -17,8 +37,40 @@
       <p class="text-sm text-gray-400 mt-2">
         Owner Email: {{ workspace.owner.email }}
       </p>
+
+      <!--********* PROJECTS ********* -->
+      <div class="bg-white rounded-xl shadow p-6 mb-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold">Projects</h2>
+
+          {% if can_manage %}
+            <a href="{% url 'projects:create' workspace.id %}"
+               class="bg-green-600 font-bold text-dark px-4 py-2 rounded-lg hover:bg-green-700">
+              +New Project
+            </a>
+          {% endif %}
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {% for project in workspace.projects.all %}
+            <a href="{% url 'projects:detail' project.id %}"
+               class="block border rounded-xl p-4 hover:bg-gray-50">
+              <h3 class="font-semibold text-gray-900">
+                {{ project.name }}
+              </h3>
+
+              <p class="text-sm text-gray-500 mt-1">
+                {{ project.description|default:"No description" }}
+              </p>
+            </a>
+          {% empty %}
+            <p class="text-gray-500">No projects yet.</p>
+          {% endfor %}
+        </div>
+    </div>
     </div>
 
+     <!--********* MEMBERS ********* -->
     <div class="bg-white rounded-xl shadow p-6">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-xl font-bold">Members</h2>
@@ -59,22 +111,16 @@
                   Owner
                 </span>
               {% elif can_manage %}
-                 <!--      create A new project-->
-                 <a href="{% url 'projects:create' workspace.id %}"
-                     class="bg-green-600 text-dark font-bold px-4 py-2 rounded-lg">
-                     + New Project
-                 </a>
-
                 <form method="post"
                       action="{% url 'workspaces:member_role_update' workspace.id membership.id %}">
                   {% csrf_token %}
-                  <select name="role" class="border rounded-lg px-3 py-2 text-sm">
+                  <select name="role" class="border rounded-lg px-6 py-2 text-sm">
                     <option value="admin" {% if membership.role == "admin" %}selected{% endif %}>Admin</option>
                     <option value="member" {% if membership.role == "member" %}selected{% endif %}>Member</option>
                     <option value="viewer" {% if membership.role == "viewer" %}selected{% endif %}>Viewer</option>
                   </select>
 
-                  <button class="ml-2 text-sm bg-gray-900 text-dark px-3 py-2 rounded-lg">
+                  <button class="ml-2 bg-green-600 text-sm bg-gray-900 text-dark px-3 py-2 rounded-lg">
                     Save
                   </button>
                 </form>

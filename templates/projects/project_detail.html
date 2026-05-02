@@ -1,0 +1,252 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto space-y-6">
+
+  <div class="flex gap-2">
+    <a href="{% url 'projects:update' project.id %}"
+       class="bg-gray-100 px-4 py-2 rounded-lg">
+      Edit
+    </a>
+
+    <form method="post" action="{% url 'projects:archive' project.id %}">
+      {% csrf_token %}
+      <button class="bg-red-100 px-4 py-2 rounded-lg">
+        Archive
+      </button>
+    </form>
+  </div>
+
+  <div class="bg-white rounded-xl shadow p-6">
+    <div class="flex items-start justify-between">
+      <div>
+        <p class="text-sm text-gray-500">
+          Workspace: {{ workspace.name }}
+        </p>
+
+        <h1 class="text-2xl font-bold text-gray-900 mt-1">
+          {{ project.name }}
+        </h1>
+
+        <p class="text-gray-500 mt-2">
+          {{ project.description|default:"No description" }}
+        </p>
+      </div>
+
+      <a href="{% url 'workspaces:detail' workspace.id %}"
+         class="text-sm bg-gray-100 text-gray-700 px-4 py-2 rounded-lg">
+        Back to Workspace
+      </a>
+    </div>
+  </div>
+
+     <!--********* BOARDS ********* -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <h2 class="text-xl font-bold">Boards</h2>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      {% for board in project.boards.all %}
+        <div class="border rounded-xl p-4">
+          <h3 class="font-bold text-gray-900">
+            {{ board.name }}
+          </h3>
+
+          <div class="flex flex-wrap gap-2 mt-3">
+            {% for column in board.columns.all %}
+              <span class="text-sm bg-gray-100 text-gray-700 border px-4 py-2 rounded-full">
+                {{ column.name }}
+              </span>
+            {% endfor %}
+          </div>
+        </div>
+      {% empty %}
+        <p class="text-gray-500">No board found.</p>
+      {% endfor %}
+    </div>
+  </div>
+
+     <!--********* TASKS ********* -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-xl font-semibold">Tasks</h2>
+        <p class="text-sm text-gray-500">
+          Tasks will be managed here.
+        </p>
+      </div>
+
+      <a href="{% url 'tasks:create' project.id %}"
+         class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+        New Task
+      </a>
+    </div>
+
+    <form method="get" class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-6">
+      <input
+        type="text"
+        name="search"
+        value="{{ request.GET.search }}"
+        placeholder="Search task..."
+        class="border rounded-lg px-3 py-2"
+      >
+
+      <select name="status" class="border rounded-lg px-3 py-2">
+        <option value="">All statuses</option>
+        <option value="todo" {% if request.GET.status == "todo" %}selected{% endif %}>Todo</option>
+        <option value="in_progress" {% if request.GET.status == "in_progress" %}selected{% endif %}>In Progress</option>
+        <option value="review" {% if request.GET.status == "review" %}selected{% endif %}>Review</option>
+        <option value="done" {% if request.GET.status == "done" %}selected{% endif %}>Done</option>
+      </select>
+
+      <select name="priority" class="border rounded-lg px-3 py-2">
+        <option value="">All priorities</option>
+        <option value="low" {% if request.GET.priority == "low" %}selected{% endif %}>Low</option>
+        <option value="medium" {% if request.GET.priority == "medium" %}selected{% endif %}>Medium</option>
+        <option value="high" {% if request.GET.priority == "high" %}selected{% endif %}>High</option>
+        <option value="urgent" {% if request.GET.priority == "urgent" %}selected{% endif %}>Urgent</option>
+      </select>
+
+      <button class="bg-gray-900 text-white px-4 py-2 rounded-lg">
+        Filter
+      </button>
+    </form>
+
+    <div class="space-y-3">
+      {% for task in tasks %}
+        <div class="border rounded-xl p-4 flex items-center justify-between">
+          <div>
+            <h3 class="font-semibold text-gray-900">
+              {{ task.title }}
+            </h3>
+
+            <p class="text-sm text-gray-500">
+              {{ task.description|truncatechars:100 }}
+            </p>
+
+            <div class="flex gap-2 mt-2">
+              {% if task.status == "todo" %}
+                <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">Todo</span>
+              {% elif task.status == "in_progress" %}
+                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">In Progress</span>
+              {% elif task.status == "review" %}
+                <span class="text-xs bg-yellow-100 text-yellow-700 px-2 py-1 rounded-full">Review</span>
+              {% elif task.status == "done" %}
+                <span class="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Done</span>
+              {% endif %}
+
+              {% if task.priority == "low" %}
+                <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">Low</span>
+              {% elif task.priority == "medium" %}
+                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">Medium</span>
+              {% elif task.priority == "high" %}
+                <span class="text-xs bg-orange-100 text-orange-700 px-2 py-1 rounded-full">High</span>
+              {% elif task.priority == "urgent" %}
+                <span class="text-xs bg-red-100 text-red-700 px-2 py-1 rounded-full">Urgent</span>
+              {% endif %}
+
+              {% if task.assignee %}
+                <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                  {{ task.assignee.email }}
+                </span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div>
+            <a href="{% url 'tasks:detail' task.id %}"
+               class="text-sm text-blue-600 hover:underline ">
+              View
+            </a>
+            <a href="{% url 'tasks:update' task.id %}"
+               class="text-sm text-gray-600 hover:underline">
+              Edit
+            </a>
+          </div>
+        </div>
+      {% empty %}
+        <div class="text-center py-10">
+          <p class="text-gray-500 font-bold">No tasks yet</p>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!--********* KANBAN BOARD ********* -->
+  <div class="bg-white rounded-xl shadow p-6">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h2 class="text-xl font-semibold text-gray-900">Kanban Board</h2>
+        <p class="text-sm text-gray-500">
+          Move tasks between columns using action buttons.
+        </p>
+      </div>
+    </div>
+
+    {% for board in project.boards.all %}
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {% for column in board.columns.all %}
+          <div class="bg-gray-50 rounded-xl p-4 border">
+            <h3 class="font-semibold text-gray-900 mb-4">
+              {{ column.name }}
+            </h3>
+
+            <div class="space-y-3">
+              {% for task in tasks %}
+                {% if task.column_id == column.id %}
+                  <div class="bg-white border rounded-xl p-4 shadow-sm">
+                    <a href="{% url 'tasks:detail' task.id %}"
+                       class="font-semibold text-gray-900 hover:text-blue-600">
+                      {{ task.title }}
+                    </a>
+
+                    <p class="text-sm text-gray-500 mt-1">
+                      {{ task.description|truncatechars:80 }}
+                    </p>
+
+                    <div class="flex flex-wrap gap-2 mt-3">
+                      <span class="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded-full">
+                        {{ task.get_priority_display }}
+                      </span>
+
+                      {% if task.assignee %}
+                        <span class="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
+                          {{ task.assignee.email }}
+                        </span>
+                      {% endif %}
+                    </div>
+
+                    <form method="post"
+                          action="{% url 'tasks:move' task.id %}"
+                          class="mt-3">
+                      {% csrf_token %}
+
+                      <select name="column_id"
+                              class="w-full border rounded-lg px-2 py-2 text-sm">
+                        {% for move_column in board.columns.all %}
+                          <option value="{{ move_column.id }}"
+                                  {% if move_column.id == task.column_id %}selected{% endif %}>
+                            {{ move_column.name }}
+                          </option>
+                        {% endfor %}
+                      </select>
+
+                      <button class="mt-2 w-full bg-gray-900 text-white px-3 py-2 rounded-lg text-sm">
+                        Move
+                      </button>
+                    </form>
+                  </div>
+                {% endif %}
+              {% empty %}
+                <p class="text-sm text-gray-500">No tasks.</p>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

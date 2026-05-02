@@ -93,3 +93,26 @@ def remove_workspace_member(*, workspace, actor, membership_id):
         raise ValidationError("You cannot remove yourself from workspace management.")
 
     membership.delete()
+
+
+@transaction.atomic
+def update_workspace(*, workspace, actor, name, description=""):
+    if not can_manage_workspace(actor, workspace):
+        raise PermissionDenied("You cannot update this workspace.")
+
+    workspace.name = name
+    workspace.description = description
+    workspace.save(update_fields=["name", "description", "updated_at"])
+
+    return workspace
+
+
+@transaction.atomic
+def archive_workspace(*, workspace, actor):
+    if workspace.owner_id != actor.id:
+        raise PermissionDenied("Only workspace owner can archive workspace.")
+
+    workspace.is_archived = True
+    workspace.save(update_fields=["is_archived", "updated_at"])
+
+    return workspace

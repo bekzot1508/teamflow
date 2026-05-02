@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+  <div class="flex items-center justify-between mb-4">
+    <h1 class="text-2xl font-bold text-gray-900">Notifications</h1>
+
+    <form method="post" action="{% url 'notifications:read_all' %}">
+      {% csrf_token %}
+      <button class="text-sm bg-gray-100 px-3 py-2 rounded-lg">
+        Mark all as read
+      </button>
+    </form>
+  </div>
+
+  <div class="space-y-3">
+    {% for n in notifications %}
+      <div class="border rounded-xl p-4 {% if not n.is_read %}bg-gray-50{% endif %}">
+        <div class="flex items-center justify-between">
+          <p class="font-medium text-gray-900">
+            {{ n.message }}
+          </p>
+
+          {% if not n.is_read %}
+            <form method="post"
+                  action="{% url 'notifications:read' n.id %}">
+              {% csrf_token %}
+              <button class="text-sm text-blue-600">
+                Mark as read
+              </button>
+            </form>
+          {% endif %}
+        </div>
+
+        <p class="text-sm text-gray-500 mt-1">
+          {{ n.created_at }}
+        </p>
+
+        {% if n.task %}
+          <a href="{% url 'tasks:detail' n.task.id %}"
+             class="text-sm text-blue-600 hover:underline">
+            View Task
+          </a>
+        {% endif %}
+      </div>
+    {% empty %}
+      <p class="text-gray-500">No notifications.</p>
+    {% endfor %}
+  </div>
+
+</div>
+{% endblock %}

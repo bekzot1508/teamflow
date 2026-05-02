@@ -14,6 +14,7 @@ class Workspace(TimeStampedModel):
         related_name="owned_workspaces",
     )
     description = models.TextField(blank=True)
+    is_archived = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ("owner", "slug")

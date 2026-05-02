@@ -2,7 +2,9 @@
 
 {% block content %}
     <div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
-      <h1 class="text-2xl font-bold mb-6">Create Workspace</h1>
+      <h1 class="text-2xl font-bold mb-6">
+        {% if is_update %}Update Workspace{% else %}Create Workspace{% endif %}
+      </h1>
 
       <form method="post" class="space-y-4">
         {% csrf_token %}
@@ -23,9 +25,9 @@
           {{ form.description.errors }}
         </div>
 
-        <button class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-          Create
-        </button>
+       <button class="bg-blue-600 px-4 py-2 rounded-lg hover:bg-blue-700">
+          {% if is_update %}Save Changes{% else %}Create{% endif %}
+       </button>
       </form>
     </div>
 {% endblock %}

@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <div class="max-w-xl mx-auto bg-white rounded-xl shadow p-6">
+    <h1 class="text-xl font-bold mb-4">
+      {% if is_update %}Update Task{% else %}Create Task{% endif %}
+    </h1>
+
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {{ form.as_p }}
+
+      <button class="bg-blue-600 text-white px-4 py-2 rounded-lg">
+        {% if is_update %}Save Changes{% else %}Create Task{% endif %}
+      </button>
+
+      {% if task %}
+        <a href="{% url 'tasks:detail' task.id %}"
+           class="ml-2 bg-gray-100 px-4 py-2 rounded-lg">
+          Cancel
+        </a>
+      {% else %}
+        <a href="{% url 'projects:detail' project.id %}"
+           class="ml-2 bg-gray-100 px-4 py-2 rounded-lg">
+          Cancel
+        </a>
+      {% endif %}
+    </form>
+  </div>
+{% endblock %}

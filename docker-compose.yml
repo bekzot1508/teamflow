@@ -12,6 +12,8 @@ services:
     depends_on:
       - db
       - redis
+    networks:
+      - teamflow_network
 
   db:
     image: postgres:16-alpine
@@ -24,12 +26,14 @@ services:
       POSTGRES_PASSWORD: teamflow_password
     ports:
       - "5432:5432"
+    networks:
+      - teamflow_network
 
   redis:
     image: redis:7-alpine
     container_name: teamflow_redis
-    ports:
-      - "6379:6379"
+    networks:
+      - teamflow_network
 
   celery:
     build: .
@@ -40,9 +44,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - web
       - redis
       - db
+    networks:
+      - teamflow_network
 
   celery_beat:
     build: .
@@ -53,9 +58,93 @@ services:
     env_file:
       - .env
     depends_on:
-      - web
       - redis
       - db
+    networks:
+      - teamflow_network
 
 volumes:
   postgres_data:
+
+networks:
+  teamflow_network:
+    driver: bridge
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#services:
+#  web:
+#    build: .
+#    container_name: teamflow_web
+#    command: python manage.py runserver 0.0.0.0:8000
+#    volumes:
+#      - .:/app
+#    ports:
+#      - "8000:8000"
+#    env_file:
+#      - .env
+#    depends_on:
+#      - db
+#      - redis
+#
+#  db:
+#    image: postgres:16-alpine
+#    container_name: teamflow_db
+#    volumes:
+#      - postgres_data:/var/lib/postgresql/data/
+#    environment:
+#      POSTGRES_DB: teamflow_db
+#      POSTGRES_USER: teamflow_user
+#      POSTGRES_PASSWORD: teamflow_password
+#    ports:
+#      - "5432:5432"
+#
+#  redis:
+#    image: redis:7-alpine
+#    container_name: teamflow_redis
+#    ports:
+#      - "6379:6379"
+#
+#  celery:
+#    build: .
+#    container_name: teamflow_celery
+#    command: celery -A config worker -l info
+#    volumes:
+#      - .:/app
+#    env_file:
+#      - .env
+#    depends_on:
+#      - web
+#      - redis
+#      - db
+#
+#  celery_beat:
+#    build: .
+#    container_name: teamflow_celery_beat
+#    command: celery -A config beat -l info
+#    volumes:
+#      - .:/app
+#    env_file:
+#      - .env
+#    depends_on:
+#      - web
+#      - redis
+#      - db
+#
+#volumes:
+#  postgres_data:

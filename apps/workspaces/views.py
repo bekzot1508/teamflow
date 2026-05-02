@@ -7,18 +7,21 @@ from django.views import View
 from .models import Workspace
 from .permissions import can_manage_workspace
 from .selectors import get_user_workspaces, get_workspace_detail
+
+from .forms import (
+    WorkspaceCreateForm,
+    WorkspaceMemberAddForm,
+    WorkspaceMemberRoleUpdateForm,
+    WorkspaceUpdateForm
+)
 from .services import (
     create_workspace,
     add_workspace_member,
     update_workspace_member_role,
     remove_workspace_member,
+    update_workspace,
+    archive_workspace
 )
-from .forms import (
-    WorkspaceCreateForm,
-    WorkspaceMemberAddForm,
-    WorkspaceMemberRoleUpdateForm,
-)
-
 
 
 class WorkspaceListView(LoginRequiredMixin, View):
@@ -95,6 +98,72 @@ class WorkspaceDetailView(LoginRequiredMixin, View):
                 "can_manage": can_manage_workspace(request.user, workspace),
             },
         )
+
+
+class WorkspaceUpdateView(LoginRequiredMixin, View):
+    template_name = "workspaces/workspace_form.html"
+
+    def get(self, request, workspace_id):
+        workspace = get_workspace_detail(workspace_id=workspace_id, user=request.user)
+
+        if workspace is None:
+            messages.error(request, "Workspace not found.")
+            return redirect("workspaces:list")
+
+        form = WorkspaceUpdateForm(instance=workspace)
+
+        return render(request, self.template_name, {
+            "form": form,
+            "workspace": workspace,
+            "is_update": True,
+        })
+
+    def post(self, request, workspace_id):
+        workspace = get_workspace_detail(workspace_id=workspace_id, user=request.user)
+
+        if workspace is None:
+            messages.error(request, "Workspace not found.")
+            return redirect("workspaces:list")
+
+        form = WorkspaceUpdateForm(request.POST, instance=workspace)
+
+        if form.is_valid():
+            try:
+                workspace = update_workspace(
+                    workspace=workspace,
+                    actor=request.user,
+                    name=form.cleaned_data["name"],
+                    description=form.cleaned_data["description"],
+                )
+                messages.success(request, "Workspace updated successfully.")
+                return redirect("workspaces:detail", workspace_id=workspace.id)
+
+            except PermissionDenied as exc:
+                messages.error(request, str(exc))
+
+        return render(request, self.template_name, {
+            "form": form,
+            "workspace": workspace,
+            "is_update": True,
+        })
+
+
+class WorkspaceArchiveView(LoginRequiredMixin, View):
+    def post(self, request, workspace_id):
+        workspace = get_workspace_detail(workspace_id=workspace_id, user=request.user)
+
+        if workspace is None:
+            messages.error(request, "Workspace not found.")
+            return redirect("workspaces:list")
+
+        try:
+            archive_workspace(workspace=workspace, actor=request.user)
+            messages.success(request, "Workspace archived successfully.")
+
+        except PermissionDenied as exc:
+            messages.error(request, str(exc))
+
+        return redirect("workspaces:list")
 
 
 class WorkspaceMemberAddView(LoginRequiredMixin, View):

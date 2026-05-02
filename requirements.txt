@@ -6,3 +6,6 @@ redis==5.2.1
 django-tailwind==3.8.0
 django-browser-reload==1.18.0
 Pillow==11.1.0
+djangorestframework==3.16.1
+djangorestframework-simplejwt==5.5.0
+drf-spectacular==0.28.0

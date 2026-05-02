@@ -2,14 +2,16 @@
 
 {% block content %}
 <div class="max-w-xl mx-auto bg-white p-6 rounded-xl shadow">
-  <h1 class="text-xl font-bold mb-4">Create Project</h1>
+   <h1 class="text-xl font-bold mb-4">
+     {% if is_update %}Update Project{% else %}Create Project{% endif %}
+   </h1>
 
   <form method="post" class="space-y-4">
     {% csrf_token %}
     {{ form.as_p }}
 
-    <button class="bg-green-600 text-dark border px-4 py-2 rounded">
-      Create
+    <button class="bg-green-600 px-4 py-2 rounded">
+      {% if is_update %}Save Changes{% else %}Create{% endif %}
     </button>
   </form>
 </div>

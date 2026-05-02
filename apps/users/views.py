@@ -51,7 +51,7 @@ class LoginView(View):
             login(request, user)
             return redirect("dashboard")
 
-        messages.error(request, "Invalid credentials")
+        messages.error(request, "Email or Password is incorrect")
         return redirect("login")
 
 

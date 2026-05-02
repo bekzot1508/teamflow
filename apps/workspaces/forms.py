@@ -13,13 +13,35 @@ class WorkspaceCreateForm(forms.ModelForm):
         fields = ("name", "description")
         widgets = {
             "name": forms.TextInput(attrs={
-                "class": "w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500",
+                "class": "w-full border rounded-lg px-3 py-2",
                 "placeholder": "Example: Utopia Team",
             }),
             "description": forms.Textarea(attrs={
-                "class": "w-full border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500",
+                "class": "w-full border rounded-lg px-3 py-2",
                 "rows": 4,
-                "placeholder": "Short description about this workspace",
+            }),
+        }
+
+    def clean_name(self):
+        name = self.cleaned_data["name"].strip()
+
+        if len(name) < 3:
+            raise forms.ValidationError("Workspace name must be at least 3 characters.")
+
+        return name
+
+
+class WorkspaceUpdateForm(forms.ModelForm):
+    class Meta:
+        model = Workspace
+        fields = ("name", "description")
+        widgets = {
+            "name": forms.TextInput(attrs={
+                "class": "w-full border rounded-lg px-3 py-2",
+            }),
+            "description": forms.Textarea(attrs={
+                "class": "w-full border rounded-lg px-3 py-2",
+                "rows": 4,
             }),
         }
 

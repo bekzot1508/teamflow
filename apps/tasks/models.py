@@ -62,6 +62,7 @@ class Task(TimeStampedModel):
     )
 
     deadline = models.DateTimeField(blank=True, null=True)
+    deadline_reminder_sent = models.BooleanField(default=False)
     position = models.PositiveIntegerField(default=0)
     is_archived = models.BooleanField(default=False)
 
@@ -106,3 +107,48 @@ class TaskActivity(TimeStampedModel):
 
     def __str__(self):
         return f"{self.task} - {self.action}"
+
+
+class TaskComment(TimeStampedModel):
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="comments",
+    )
+
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="task_comments",
+    )
+
+    body = models.TextField()
+
+    class Meta:
+        ordering = ("created_at",)
+
+    def __str__(self):
+        return f"{self.author} - {self.task}"
+
+
+class TaskAttachment(TimeStampedModel):
+    task = models.ForeignKey(
+        Task,
+        on_delete=models.CASCADE,
+        related_name="attachments",
+    )
+    uploaded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="task_attachments",
+    )
+    file = models.FileField(upload_to="task_attachments/")
+    original_filename = models.CharField(max_length=255)
+    file_size = models.PositiveIntegerField()
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ("-uploaded_at",)
+
+    def __str__(self):
+        return self.original_filename

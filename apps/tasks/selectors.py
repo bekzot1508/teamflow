@@ -73,6 +73,8 @@ def get_task_detail(*, task_id, user):
         )
         .prefetch_related(
             "activities__actor",
+            "comments__author",
+            "attachments__uploaded_by",
         )
         .first()
     )
@@ -90,3 +92,19 @@ def get_next_task_position(*, column):
         return 0
 
     return last_task.position + 1
+
+
+#_______________ Task position/reorder logic _______________#
+def normalize_column_positions(*, column):
+    tasks = (
+        Task.objects
+        .filter(column=column, is_archived=False)
+        .order_by("position", "created_at")
+    )
+
+    for index, task in enumerate(tasks):
+        if task.position != index:
+            task.position = index
+            task.save(update_fields=["position"])
+
+
