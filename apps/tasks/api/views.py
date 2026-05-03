@@ -19,7 +19,7 @@ from apps.tasks.services import (
     move_task_to_column,
     archive_task,
 )
-
+from apps.common.api_response import success_response, error_response
 User = get_user_model()
 
 from .serializers import (
@@ -59,6 +59,59 @@ class TaskListCreateAPIView(APIView):
 
         serializer = TaskListSerializer(page, many=True)
         return paginator.get_paginated_response(serializer.data)
+
+    def post(self, request):
+        serializer = TaskCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        project = get_object_or_404(
+            Project,
+            id=serializer.validated_data["project_id"],
+            workspace__memberships__user=request.user,
+            is_archived=False,
+        )
+
+        board = project.boards.first()
+
+        if board is None:
+            return error_response(
+                message="Project has no board.",
+                code="board_not_found",
+                status=400,
+            )
+
+        column = board.columns.order_by("position").first()
+
+        if column is None:
+            return error_response(
+                message="Board has no columns.",
+                code="column_not_found",
+                status=400,
+            )
+
+        assignee = None
+        assignee_id = serializer.validated_data.get("assignee_id")
+
+        if assignee_id:
+            assignee = get_object_or_404(User, id=assignee_id)
+
+        task = create_task(
+            project=project,
+            board=board,
+            column=column,
+            actor=request.user,
+            title=serializer.validated_data["title"],
+            description=serializer.validated_data.get("description", ""),
+            priority=serializer.validated_data["priority"],
+            assignee=assignee,
+            deadline=serializer.validated_data.get("deadline"),
+        )
+
+        return success_response(
+            TaskDetailSerializer(task).data,
+            message="Task created",
+            status=201,
+        )
 
 
 #____________ Task Detail ____________#
@@ -163,3 +216,24 @@ class TaskArchiveAPIView(APIView):
             data={"id": task.id},
             message="Task archived",
         )
+
+
+# class TaskStatusUpdateAPIView(APIView):
+#     def patch(self, request, task_id):
+#         task = get_object_or_404(Task, id=task_id)
+#
+#         new_status = request.data.get("status")
+#
+#         change_task_status(
+#             task=task,
+#             actor=request.user,
+#             new_status=new_status,
+#         )
+#
+#         return success_response(
+#             {
+#                 "id": task.id,
+#                 "status": task.status,
+#             },
+#             message="Status updated",
+#         )

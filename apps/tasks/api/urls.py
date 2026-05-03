@@ -14,4 +14,5 @@ urlpatterns = [
     path("<int:task_id>/update/", TaskUpdateAPIView.as_view(), name="task-update"),
     path("<int:task_id>/move/", TaskMoveAPIView.as_view(), name="task-move"),
     path("<int:task_id>/archive/", TaskArchiveAPIView.as_view(), name="task-archive"),
+    # path("<int:task_id>/status/", TaskStatusUpdateAPIView.as_view()),
 ]

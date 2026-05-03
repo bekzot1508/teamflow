@@ -159,6 +159,10 @@ def create_task(
 def change_task_status(*, task, actor, new_status):
     task = Task.objects.select_for_update().get(id=task.id)
 
+    # 🔥 IDENTITY CHECK (ENG MUHIM)
+    if task.status == new_status:
+        return task
+
     if not can_update_task(actor, task.project.workspace):
         raise PermissionDenied("You cannot update this task.")
 
@@ -216,6 +220,9 @@ def move_task_to_column(*, task, actor, target_column, target_position=None):
 
     if not can_update_task(actor, task.project.workspace):
         raise PermissionDenied("You cannot move this task.")
+
+    if task.column_id == target_column.id:
+        return task
 
     if target_column.board_id != task.board_id:
         raise ValidationError("Target column does not belong to this board.")

@@ -16,6 +16,9 @@ DEFAULT_COLUMNS = [
 
 @transaction.atomic
 def create_project(*, workspace, creator, name, description=""):
+    if not can_create_project(creator, workspace):
+        raise PermissionDenied("You cannot create project in this workspace.")
+
     project = Project.objects.create(
         workspace=workspace,
         name=name,
