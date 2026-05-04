@@ -242,11 +242,18 @@ class WorkspaceMemberUpdateDeleteAPIView(APIView):
                 status=404,
             )
 
-        remove_workspace_member(
-            workspace=workspace,
-            actor=request.user,
-            membership_id=member_id,
-        )
+        try:
+            remove_workspace_member(
+                workspace=workspace,
+                actor=request.user,
+                membership_id=member_id,
+            )
+        except ValidationError as e:
+            return error_response(
+                message=str(e),
+                code="validation_error",
+                status=400,
+            )
 
         return success_response(
             data={"id": member_id},

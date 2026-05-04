@@ -1,6 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
-
+from django.core.exceptions import ValidationError
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -308,17 +308,21 @@ class TaskAttachmentListUploadAPIView(APIView):
         serializer = TaskAttachmentUploadSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
-        attachment = attach_file_to_task(
-            task=task,
-            actor=request.user,
-            uploaded_file=serializer.validated_data["file"],
-        )
+        try:
+            attachment = attach_file_to_task(
+                task=task,
+                actor=request.user,
+                uploaded_file=serializer.validated_data["file"],
+            )
+        except ValidationError as e:
+            return error_response(
+                message=str(e),
+                code="validation_error",
+                status=400,
+            )
 
         return success_response(
-            TaskAttachmentSerializer(
-                attachment,
-                context={"request": request},
-            ).data,
+            TaskAttachmentSerializer(attachment, context={"request": request},).data,
             message="Attachment uploaded",
             status=201,
         )
