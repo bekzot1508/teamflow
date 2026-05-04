@@ -61,3 +61,12 @@ class WorkspaceCreateSerializer(serializers.Serializer):
 class WorkspaceUpdateSerializer(serializers.Serializer):
     name = serializers.CharField(max_length=255)
     description = serializers.CharField(required=False, allow_blank=True)
+
+
+class WorkspaceMemberAddSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    role = serializers.ChoiceField(choices=WorkspaceMember.Role.choices)
+
+
+class WorkspaceMemberRoleUpdateSerializer(serializers.Serializer):
+    role = serializers.ChoiceField(choices=WorkspaceMember.Role.choices)

@@ -441,8 +441,6 @@ def create_task_comment(*, task, author, body):
 
     usernames = set(extract_mentions(body))
 
-    usernames = set(extract_mentions(body))
-
     if usernames:
         mentioned_users = User.objects.filter(
             username__in=usernames,

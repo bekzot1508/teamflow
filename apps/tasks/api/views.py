@@ -7,7 +7,7 @@ from rest_framework.views import APIView
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 
 from apps.projects.models import Project, Column
-from apps.tasks.models import Task
+from apps.tasks.models import Task, TaskAttachment
 from apps.tasks.selectors import (
     get_project_tasks,
     get_task_detail,
@@ -18,20 +18,27 @@ from apps.tasks.services import (
     update_task,
     move_task_to_column,
     archive_task,
+    create_task_comment,
+    attach_file_to_task,
+    delete_task_attachment,
 )
 from apps.common.api_response import success_response, error_response
-User = get_user_model()
-
 from .serializers import (
     TaskListSerializer,
     TaskDetailSerializer,
     TaskCreateSerializer,
     TaskUpdateSerializer,
     TaskMoveSerializer,
+    TaskCommentSerializer,
+    TaskCommentCreateSerializer,
+    TaskAttachmentSerializer,
+    TaskAttachmentUploadSerializer,
 )
 
 from apps.common.pagination import StandardPagination
-from apps.common.api_response import success_response, error_response
+
+User = get_user_model()
+
 
 #____________ Task List + Create ____________#
 class TaskListCreateAPIView(APIView):
@@ -216,6 +223,126 @@ class TaskArchiveAPIView(APIView):
             data={"id": task.id},
             message="Task archived",
         )
+
+
+class TaskCommentListCreateAPIView(APIView):
+    def get(self, request, task_id):
+        task = get_task_detail(task_id=task_id, user=request.user)
+
+        if task is None:
+            return error_response(
+                message="Task not found or access denied.",
+                code="not_found",
+                status=404,
+            )
+
+        comments = task.comments.select_related("author").order_by("created_at")
+
+        serializer = TaskCommentSerializer(comments, many=True)
+
+        return success_response(
+            serializer.data,
+            message="Task comments",
+        )
+
+    def post(self, request, task_id):
+        task = get_task_detail(task_id=task_id, user=request.user)
+
+        if task is None:
+            return error_response(
+                message="Task not found or access denied.",
+                code="not_found",
+                status=404,
+            )
+
+        serializer = TaskCommentCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        comment = create_task_comment(
+            task=task,
+            author=request.user,
+            body=serializer.validated_data["body"],
+        )
+
+        return success_response(
+            TaskCommentSerializer(comment).data,
+            message="Comment created",
+            status=201,
+        )
+
+
+class TaskAttachmentListUploadAPIView(APIView):
+    def get(self, request, task_id):
+        task = get_task_detail(task_id=task_id, user=request.user)
+
+        if task is None:
+            return error_response(
+                message="Task not found or access denied.",
+                code="not_found",
+                status=404,
+            )
+
+        attachments = task.attachments.select_related("uploaded_by").order_by("-created_at")
+
+        serializer = TaskAttachmentSerializer(
+            attachments,
+            many=True,
+            context={"request": request},
+        )
+
+        return success_response(
+            serializer.data,
+            message="Task attachments",
+        )
+
+    def post(self, request, task_id):
+        task = get_task_detail(task_id=task_id, user=request.user)
+
+        if task is None:
+            return error_response(
+                message="Task not found or access denied.",
+                code="not_found",
+                status=404,
+            )
+
+        serializer = TaskAttachmentUploadSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        attachment = attach_file_to_task(
+            task=task,
+            actor=request.user,
+            uploaded_file=serializer.validated_data["file"],
+        )
+
+        return success_response(
+            TaskAttachmentSerializer(
+                attachment,
+                context={"request": request},
+            ).data,
+            message="Attachment uploaded",
+            status=201,
+        )
+
+
+class TaskAttachmentDeleteAPIView(APIView):
+    def delete(self, request, attachment_id):
+        attachment = get_object_or_404(
+            TaskAttachment,
+            id=attachment_id,
+            task__project__workspace__memberships__user=request.user,
+        )
+
+        delete_task_attachment(
+            attachment=attachment,
+            actor=request.user,
+        )
+
+        return success_response(
+            data={"id": attachment_id},
+            message="Attachment deleted",
+        )
+
+
 
 
 # class TaskStatusUpdateAPIView(APIView):
